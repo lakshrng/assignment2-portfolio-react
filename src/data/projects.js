@@ -14,7 +14,7 @@ const projects= [
         description: "AI Powered News article aggregator",
         techStack:["React", "NodeJS", "Express"],
         link: "https://github.com/lakshrng/News-Project" ,
-        image: "/images/news_app.png"
+        image: "/images/news_app.PNG"
     },
     
     {
@@ -23,7 +23,7 @@ const projects= [
         description: "A tourism website for the city of Bali, Indonesia",
         techStack:['HTML', "CSS"],
         link: "https://github.com/lakshrng/Tourism-website-bali",
-        image: "/images/bali_site.png"
+        image: "/images/bali_site.PNG"
     }
 ]
 
