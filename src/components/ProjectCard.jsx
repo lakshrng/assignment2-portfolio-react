@@ -25,7 +25,7 @@ export default function ProjectCard({ project }) {
           </button>
 
           <Link to={`/projects/${project.id}`} className="text-link">
-            Open project
+            Open full project
           </Link>
         </div>
 

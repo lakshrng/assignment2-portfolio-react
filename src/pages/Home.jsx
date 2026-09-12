@@ -5,13 +5,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    const timer = setTimeout(() => { setIsLoading(false); }, 1000);
 
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => { clearTimeout(timer);};
   }, []);
 
   if (isLoading) {
@@ -29,8 +25,8 @@ export default function Home() {
           <p className="eyebrow">Full Stack Developer & Designer</p>
           <h1>Laksh Rangnekar</h1>
           <p className="lead">
-            I build thoughtful digital experiences that blend engineering precision with
-            product design, with a strong focus on clean interfaces and reliable systems.
+            I build and develop projects that focus on deep
+            product design, as well as maintaining clean interfaces and reliable systems.
           </p>
 
           <div className="hero-actions">

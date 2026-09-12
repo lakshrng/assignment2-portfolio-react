@@ -11,7 +11,9 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function ContactForm() {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = (nextValues) => {
     const nextErrors = {};
@@ -46,21 +48,50 @@ export default function ContactForm() {
       }));
     }
 
+    if (submitError) {
+      setSubmitError('');
+    }
+
     setSubmitted(false);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const nextErrors = validateForm(values);
     setErrors(nextErrors);
+    setSubmitError('');
 
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
-    setSubmitted(true);
-    setValues(initialValues);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to send your message.');
+      }
+
+      setSubmitted(true);
+      setValues(initialValues);
+      setErrors({});
+    } catch (error) {
+      setSubmitError(error.message);
+      setSubmitted(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const validationErrors = validateForm(values);
@@ -68,7 +99,8 @@ export default function ContactForm() {
     !values.name.trim() ||
     !values.email.trim() ||
     !values.message.trim() ||
-    Object.keys(validationErrors).length > 0;
+    Object.keys(validationErrors).length > 0 ||
+    isSubmitting;
 
   return (
     <form className="contact-form" onSubmit={handleSubmit} noValidate>
@@ -112,9 +144,10 @@ export default function ContactForm() {
       </div>
 
       <button type="submit" className="primary-button" disabled={isSubmitDisabled}>
-        Send Message
+        {isSubmitting ? 'Sending...' : 'Send Message'}
       </button>
 
+      {submitError && <p className="form-error">{submitError}</p>}
       {submitted && <p className="success-message">Message sent successfully.</p>}
     </form>
   );

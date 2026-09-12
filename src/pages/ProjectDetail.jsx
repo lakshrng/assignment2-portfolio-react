@@ -1,14 +1,59 @@
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import projects from '../data/projects.js';
 
 export default function ProjectDetail() {
   const { projectId } = useParams();
-  const project = projects.find((item) => item.id === projectId);
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  if (!project) {
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchProject = async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectId}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Project not found');
+        }
+
+        if (isMounted) {
+          setProject(data);
+        }
+      } catch (fetchError) {
+        if (isMounted) {
+          setError(fetchError.message || 'Project not found');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProject();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId]);
+
+  if (loading) {
     return (
       <section className="project-detail-page empty-state">
-        <h1>Project Not Found</h1>
+        <div className="loading-screen" aria-live="polite">
+          <div className="loader" aria-label="Loading project details" />
+        </div>
+      </section>
+    );
+  }
+
+  if (error || !project) {
+    return (
+      <section className="project-detail-page empty-state">
+        <h1>{error || 'Project Not Found'}</h1>
         <Link to="/projects" className="primary-button">
           Back to Projects
         </Link>
@@ -37,7 +82,7 @@ export default function ProjectDetail() {
 
           <div className="project-actions">
             <a href={project.link} target="_blank" rel="noreferrer" className="primary-button">
-              View Project
+              View Github Repo
             </a>
             <Link to="/projects" className="secondary-button">
               Back to projects

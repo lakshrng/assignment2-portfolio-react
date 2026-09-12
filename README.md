@@ -1,43 +1,230 @@
-# My Portfolio
+## Portfolio
 
-This portfolio is a Vite + React app built with plain JavaScript and JSX. It includes a light/dark theme toggle, responsive navigation, project cards, a detail page, and a contact form.
+This portfolio keeps the Assignment 2 React frontend intact while moving project data and contact submissions behind an Express backend in the `server` folder.
 
-## Setup and run
+// Demo video
 
+## Architecture
+
+- Frontend: Vite + React app in the project root
+- Backend: Express API in `server/`
+- Data storage choice: in-memory arrays for projects and contact submissions
+- Environment config: `.env` values loaded via `dotenv`
+
+## Backend setup
+
+From the `server` directory:
+
+```bash
+cd server
+cp .env.example .env
+npm install
+npm start
+```
+
+For development with auto-restart:
+
+```bash
+cd server
+npm run dev
+```
+
+The Express server reads the `PORT` value from `.env`, defaults to `5000` if it is missing, and enables CORS for the Vite frontend.
+
+## Frontend setup
+
+From the project root:
+
+```bash
 npm install
 npm run dev
+```
 
-(for production build)
-   npm run build
+The Vite dev server proxies `/api` requests to the backend at `http://localhost:5000`.
 
-## Component tree
+## API endpoints
 
-App: sets up the router and page layout.
-Layout: gives the header, routed content, and footer throughout all pages
-Navbar: contains the navigation links and the theme toggle.
-Home: landing page hero section with a loading state.
-About: biography, skills, and achievements.
-Projects: maps project data into reusable cards.
-ProjectCard: shows each project card and contains its own states
-TechStack: receives the tech stack array and renders the tags.
-ProjectDetail: matches the URL to the correct project and shows detail content.
-Contact: contains the contact details and the form.
-ContactForm: controlled inputs with validation and disabled submit state.
-ThemeContext: provides the global theme state to the app.
+### 1) GET /
 
-Theme State
+Returns the server health status.
 
-Essentially used context instead of props because that theme can be passed through to all the various pages.
+Request:
 
-Images
+bash
+curl http://localhost:5000/
 
-Instead of using src/assets for images, but the project data stores image paths as string values such as /images/digivote.PNG and passes them directly to an img src attribute. In Vite, those paths resolve from the public folder, so the project images are intentionally stored in public/images instead of src/assets. 
+Response:
 
-useEffects: 
+json
+{ "status": "ok" }
 
-Home page loading simulation: there is a timeout on the homescreen for about a second, then reveals the real content. Cleanup clears the timeout to avoid state updates after unmount.
 
-ThemeContext persistence: the theme is saved to localStorage whenever it changes and restored on initial load, so whenever the page is refreshed it remains on the theme it was on.
+### 2) GET /api/projects
 
-Navbar resize listener: a window resize event listens for mobile/tablet breakpoints so the nav can collapse or expand appropriately, and the listener is removed on unmount.
+Returns all portfolio projects.
+
+Request:
+
+```bash
+curl http://localhost:5000/api/projects
+```
+
+Response:
+
+```json
+[
+  {
+    "id": "opiniote",
+    "title": "Opinote",
+    "description": "A dynamic opinion and voting system for a college campus.",
+    "techStack": ["React", "Python", "RestAPIs"],
+    "image": "/images/digivote.PNG",
+    "link": "https://github.com/lakshrng/DigiVote"
+  }
+]
+```
+
+### 3) GET /api/projects/:id
+
+Returns a single project by ID.
+
+Request:
+
+```bash
+curl http://localhost:5000/api/projects/opiniote
+```
+
+Success response:
+
+```json
+{
+  "id": "opiniote",
+  "title": "Opinote",
+  "description": "A dynamic opinion and voting system for a college campus.",
+  "techStack": ["React", "Python", "RestAPIs"],
+  "image": "/images/digivote.PNG",
+  "link": "https://github.com/lakshrng/DigiVote"
+}
+```
+
+Failure response:
+
+```json
+{ "error": "Project not found" }
+```
+
+### 4) POST /api/contact
+
+Accepts a contact message payload.
+
+Request body:
+
+```json
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "message": "Hello from the portfolio site."
+}
+```
+
+Success response:
+
+```json
+{
+  "message": "Message sent successfully.",
+  "submission": {
+    "id": "1",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "message": "Hello from the portfolio site.",
+    "createdAt": "2026-09-04T00:00:00.000Z"
+  }
+}
+```
+
+Validation failure examples:
+
+```json
+{ "error": "Email is required." }
+```
+
+```json
+{ "error": "Enter a valid email address." }
+```
+
+### 5) GET /api/contact
+
+Returns all stored contact submissions.
+
+This endpoint is intentionally open and unauthenticated by design.
+
+Request:
+
+```bash
+curl http://localhost:5000/api/contact
+```
+
+Response:
+
+```json
+[
+  {
+    "id": "1",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "message": "Hello from the portfolio site.",
+    "createdAt": "2026-09-04T00:00:00.000Z"
+  }
+]
+```
+
+### 6) Undefined routes / JSON errors
+
+Any undefined route returns a JSON payload instead of HTML.
+
+Example:
+
+```bash
+curl http://localhost:5000/not-real-route
+```
+
+Response:
+
+```json
+{ "error": "Route not found" }
+```
+
+### 7) CORS and environment configuration
+
+The backend is configured for CORS with the allowed origin defined in `server/.env.example`.
+
+Required environment variables:
+
+```env
+PORT=5000
+ALLOWED_ORIGIN=http://localhost:5173
+PROJECTS_DATA_PATH=./data/projects.js
+CONTACT_DATA_PATH=./data/contactSubmissions.js
+```
+
+The actual `.env` file is local-only and should not be committed to source control.
+
+## Notes
+
+- The project data and contact submissions are stored in memory, not duplicated in the React app.
+- The frontend fetches project data and project details from the backend API instead of importing local JSON files.
+- Contact form submissions are persisted on the server and can be retrieved through the open `/api/contact` endpoint.
+
+## Component summary
+
+- App: router and layout composition
+- Layout: shared page shell and navigation
+- Navbar: navigation links and theme toggle
+- Home: landing page and loading state
+- About: technical and personal profile content
+- Projects: loads from `/api/projects`
+- ProjectDetail: loads from `/api/projects/:id`
+- Contact: page layout and contact form
+- ContactForm: client validation plus server submission handling
+- ThemeContext: theme state persistence
 
